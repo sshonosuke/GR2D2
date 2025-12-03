@@ -6,7 +6,7 @@ Eric, Y., Irie, K. and Sugasawa, S. (2025). The Group R2D2 Shrinkage Prior for S
 
 The repository includes the following 3 files.
 
-- gR2D2.R: Scriot to implement the proposed CSM model for graphical modeling
-- Competitors.R: Scriot to implement existing shrinkage pirors
-- Example.R: Scriot to run a oneshot simulation
+- `gR2D2.R`: Scriot to implement the proposed CSM model for graphical modeling
+- `Competitors.R`: Scriot to implement existing shrinkage pirors
+- `Example.R`: Scriot to run a oneshot simulation
 
