@@ -2,7 +2,7 @@
 
 This repository provides R code implementing grouped R2D2 prior, as proposed by the following paper.
 
-Eric, Y., Irie, K. and Sugasawa, S. (2025). The Group R2D2 Shrinkage Prior for Sparse Linear Models with Grouped Covariates. (arXiv:2508.18004)
+Yanchenko, E., Irie, K. and Sugasawa, S. (2025). The Group R2D2 Shrinkage Prior for Sparse Linear Models with Grouped Covariates. (arXiv:2508.18004)
 
 The repository includes the following 3 files.
 
