@@ -119,8 +119,8 @@ for(l in 1:L){
     try( Fit[[2]] <- HS(Y, X, a=1/2, b=1/2, mc=mc, bn=bn) )         # HS (without group information)
     try( Fit[[3]] <- GIGG(Y, X, ID, a=1/p, b=1/2, mc=mc, bn=bn) )   # grouped GIG
     try( Fit[[4]] <- GHS(Y, X, ID, mc=mc, bn=bn) )                  # grouped HS 
-    try( Fit[[5]] <- R2D4_Laplace(Y, X, Group_ID=ID, phi_dist="Dir", mc=mc, bn=bn) )   # (proposed) grouped R2D2 with Dirichlet 
-    try( Fit[[6]] <- R2D4_Laplace(Y, X, Group_ID=ID, phi_dist="LN", mc=mc, bn=bn) )    # (proposed) grouped R2D2 with logistic normal
+    try( Fit[[5]] <- R2D2_group(Y, X, Group_ID=ID, phi_dist="Dir", mc=mc, bn=bn) )   # (proposed) grouped R2D2 with Dirichlet 
+    try( Fit[[6]] <- R2D2_group(Y, X, Group_ID=ID, phi_dist="LN", mc=mc, bn=bn) )    # (proposed) grouped R2D2 with logistic normal
     
     # posterior median
     hBeta <- c()

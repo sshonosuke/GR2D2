@@ -61,15 +61,8 @@ for(r in 1:R){
     Fit[[2]] <- HS(Y_train, X_train, a=1/2, b=1/2, mc=mc, bn=bn) 
     Fit[[3]] <- GIGG(Y_train, X_train, ID, a=1/p, b=1/2, mc=mc, bn=bn) 
     Fit[[4]] <- GHS(Y_train, X_train, ID, mc=mc, bn=bn) 
-    
-    variation <- c()
-    for(g in 1:G){
-      variation[g] <- mean( predict(lm(Y_train~X_train[,ID==g]))^2 )
-    }
-    ratio <- variation/sum(variation)
-    c <- 1/2
-    Fit[[5]] <- R2D4_Laplace(Y_train, X_train, Group_ID=ID, a_g=c*ratio, b=c, phi_dist="Dir", mc=mc, bn=bn) 
-    Fit[[6]] <- R2D4_Laplace(Y_train, X_train, Group_ID=ID, a_g=c*ratio, b=c, phi_dist="LN", mc=mc, bn=bn) 
+    Fit[[5]] <- R2D2_group(Y_train, X_train, Group_ID=ID, phi_dist="Dir", mc=mc, bn=bn) 
+    Fit[[6]] <- R2D2_group(Y_train, X_train, Group_ID=ID, phi_dist="LN", mc=mc, bn=bn) 
     
     # prediction 
     Pred <- matrix(NA, m, M)

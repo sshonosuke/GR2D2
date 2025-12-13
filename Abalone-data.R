@@ -56,8 +56,8 @@ Fit[[1]] <- R2D2(Y, X, a=1/2, b=1/2, mc=mc, bn=bn)
 Fit[[2]] <- HS(Y, X, a=1/2, b=1/2, mc=mc, bn=bn) 
 Fit[[3]] <- GIGG(Y, X, ID, a=1/p, b=1/2, mc=mc, bn=bn) 
 Fit[[4]] <- GHS(Y, X, ID, mc=mc, bn=bn) 
-Fit[[5]] <- R2D4_Laplace(Y, X, Group_ID=ID, phi_dist="Dir", mc=mc, bn=bn) 
-Fit[[6]] <- R2D4_Laplace(Y, X, Group_ID=ID, phi_dist="LN", mc=mc, bn=bn) 
+Fit[[5]] <- R2D2_group(Y, X, Group_ID=ID, phi_dist="Dir", mc=mc, bn=bn) 
+Fit[[6]] <- R2D2_group(Y, X, Group_ID=ID, phi_dist="LN", mc=mc, bn=bn) 
 
 
 ## posterior median

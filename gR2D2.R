@@ -11,7 +11,7 @@ library(base)   # for trigamma function
 ## ("Dir" for Dirichlet distribution and "LN" for logistic normal) 
 ## eta_sig: standard deviation of normal distributions for LN
 
-R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2, 
+R2D2_group <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2, 
                          phi_dist="LN", sampler=NULL){
   # preparation
   p <- dim(X)[2]
