@@ -12,7 +12,7 @@ library(base)   # for trigamma function
 ## eta_sig: standard deviation of normal distributions for LN
 
 R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2, 
-                         phi_dist="LN"){
+                         phi_dist="LN", sampler=NULL){
   # preparation
   p <- dim(X)[2]
   G <- max(Group_ID)
@@ -20,6 +20,21 @@ R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2,
   n0 <- d0 <- 2        # prior of sigma^2: IG(n0/2, d0/2)
   thres <- 10^(-10)
   p_g <- table(Group_ID)    # number of covariates in each group
+  n <- length(Y)
+  if(p>n){ 
+    sampler="BCM" 
+  }else{
+    sampler="Standard"
+  }
+  
+  if(is.null(a_g)){
+    variation <- c()
+    for(g in 1:G){
+      variation[g] <- mean( predict(lm(Y~X[,ID==g]))^2 )
+    }
+    ratio <- variation/sum(variation)
+    a_g <- (1/2)*ratio
+  }
   
   # function: log-ratio-transformation 
   LR <- function(x){
@@ -42,6 +57,7 @@ R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2,
   # initial values
   beta <- coef(lm(Y~X-1))
   sig  <- sd(Y-X%*%beta)
+  if(is.na(sig)){ sig <- sd(Y) }
   psi <- rep(1, p)  # within-group parameter for Laplace distribution 
   phi <- rep(1/p_g, p_g)  # within-group parameter for local shrinkage
   gam <- rep(1, G)  # group-wise parameter for group-level shrinkage
@@ -61,10 +77,19 @@ R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2,
     # beta
     lam <- psi*phi*gam[Group_ID]/2
     lam[lam<thres] <- thres
-    Inv_Lam <- diag( 1/lam )
-    Sig_beta <- solve(  X_mat + Inv_Lam )
-    Mu_beta <- Sig_beta%*%t(X)%*%Y
-    beta <- mvrnorm(1, Mu_beta, sig^2*Sig_beta)
+    if(sampler=="BCM"){   # BCM sampler (p>n)
+      u <- rnorm(p)*sig*sqrt(lam)
+      v <- X%*%u + sig*rnorm(n)
+      XL <- t(t(X)*lam)
+      M <- XL%*%t(X) + diag(n)
+      rhs <- Y - v
+      w <- solve(M, rhs)
+      beta <- u + lam*(t(X)%*%w)
+    }else{  # standard sampler (n<p)
+      Sig_beta <- solve(  X_mat + diag( 1/lam ) )
+      Mu_beta <- Sig_beta%*%t(X)%*%Y
+      beta <- mvrnorm(1, Mu_beta, sig^2*Sig_beta)
+    }
     
     # sigma (error standard deviation)
     resid <- Y - as.vector(X%*%beta)
@@ -162,7 +187,3 @@ R2D4_Laplace <- function(Y, X, Group_ID, mc=2000, bn=1000, a_g=NULL, b=1/2,
                  gam=gam_pos, ac_ratio=AC_ratio)
   return(Result)
 }
-
-
-
-

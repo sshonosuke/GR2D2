@@ -2,13 +2,24 @@
 ###             Comparative shrinkage priors                    ###
 ###-------------------------------------------------------------###
 
-## standard Horseshoe 
+## sampler 
+# "Standard": standard full conditional Gaussian 
+# "BCM": efficient sampler by Bhattacharya, Chakraborty and Mallick (2016)
+
+
+# standard Horseshoe 
 HS <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
   # preparation
   p <- dim(X)[2]
   X_mat <- t(X)%*%X
-  delta <- 1   # prior of sigma^2
+  delta <- 1     # prior of sigma^2
   thres <- 10^(-8)
+  n <- length(Y)
+  if(p>n){ 
+    sampler="BCM" 
+  }else{
+    sampler="Standard"
+  }
   
   # initial values
   beta <- coef(lm(Y~X-1))
@@ -22,12 +33,24 @@ HS <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
   
   # MCMC
   for(k in 1:(mc+bn)){
-    # beta
+    # beta 
     ss <- psi*xi
     ss[ss<thres] <- thres
-    A <- solve( X_mat + diag(1/ss) )
-    B <- as.vector(t(X)%*%Y)
-    beta <- mvrnorm(1, A%*%B, sig^2*A)
+    if(sampler=="BCM"){   # BCM sampler (p>n)
+      lam_diag <- ss 
+      u <- rnorm(p)*sig*sqrt(lam_diag)
+      v <- X%*%u + sig*rnorm(n)
+      XL <- t(t(X)*lam_diag)
+      M <- XL%*%t(X) + diag(n)
+      rhs <- Y - v
+      w <- solve(M, rhs)
+      beta <- u + lam_diag*(t(X)%*%w)
+    }else{  # standard sampler (n<p)
+      A <- solve( X_mat + diag(1/ss) )
+      B <- as.vector(t(X)%*%Y)
+      beta <- mvrnorm(1, A%*%B, sig^2*A)
+    }
+    
     if(k > bn){
       beta.pos[k-bn,] <- beta
     }
@@ -55,16 +78,19 @@ HS <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
 
 
 
-
-
-
-## standard R2D2
+# standard R2D2
 R2D2 <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
   # preparation
   p <- dim(X)[2]
   X_mat <- t(X)%*%X
   delta <- 1   # prior of sigma^2
   thres <- 10^(-8)
+  n <- length(Y)
+  if(p>n){ 
+    sampler="BCM" 
+  }else{
+    sampler="Standard"
+  }
   
   # initial values
   beta <- coef(lm(Y~X-1))
@@ -80,10 +106,21 @@ R2D2 <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
   
   # MCMC
   for(k in 1:(mc+bn)){
-    # beta
-    A <- solve( X_mat + diag(2/(psi*lam)) )
-    B <- as.vector(t(X)%*%Y)
-    beta <- mvrnorm(1, A%*%B, sig^2*A)
+    if(sampler=="BCM"){   # BCM sampler (p>n)
+      lam_diag <- psi*lam/2
+      u <- rnorm(p)*sig*sqrt(lam_diag)
+      v <- X%*%u + sig*rnorm(n)
+      XL <- t(t(X)*lam_diag)
+      M <- XL%*%t(X) + diag(n)
+      rhs <- Y - v
+      w <- solve(M, rhs)
+      beta <- u + lam_diag*(t(X)%*%w)
+    }else{  # standard sampler (n<p)
+      A <- solve( X_mat + diag(2/(psi*lam)) + 10^(-5)*diag(p) )
+      B <- as.vector(t(X)%*%Y)
+      beta <- mvrnorm(1, A%*%B, sig^2*A)
+    }
+    
     if(k > bn){
       beta.pos[k-bn,] <- beta
     }
@@ -117,8 +154,7 @@ R2D2 <- function(Y, X, a=1/2, b=1/2, mc=2000, bn=500){
 
 
 
-
-## GIGG
+# GIGG
 GIGG <- function(Y, X, ID, a=1/2, b=1/2, mc=2000, bn=500){
   # preparation
   G <- max(ID)
@@ -126,6 +162,12 @@ GIGG <- function(Y, X, ID, a=1/2, b=1/2, mc=2000, bn=500){
   X_mat <- t(X)%*%X
   delta <- 1   # prior of sigma^2
   thres <- 10^(-10)
+  n <- length(Y)
+  if(p>n){ 
+    sampler="BCM" 
+  }else{
+    sampler="Standard"
+  }
   
   # initial values
   beta <- coef(lm(Y~X-1))
@@ -143,9 +185,20 @@ GIGG <- function(Y, X, ID, a=1/2, b=1/2, mc=2000, bn=500){
     # beta
     V <- tau^2*lam*gam[ID]
     V[V<thres] <- thres
-    A <- solve( X_mat/sig^2 + diag(1/V) )
-    B <- as.vector(t(X)%*%Y)/sig^2
-    beta <- mvrnorm(1, A%*%B, A)
+    if(sampler=="BCM"){   # BCM sampler (p>n)
+      u <- rnorm(p)*sqrt(V)
+      v <- X%*%u/sig+rnorm(n)
+      XL <- t(t(X)*V)
+      M <- XL%*%t(X)/sig^2+diag(n)
+      rhs <- Y/sig-v
+      w <- solve(M,rhs)
+      beta <- u+V*(t(X)%*%w)/sig
+    }else{  # standard sampler (n<p)
+      A <- solve( X_mat/sig^2 + diag(1/V) )
+      B <- as.vector(t(X)%*%Y)/sig^2
+      beta <- mvrnorm(1, A%*%B, A)
+    }
+    
     if(k > bn){
       beta.pos[k-bn,] <- beta
     }
@@ -173,8 +226,7 @@ GIGG <- function(Y, X, ID, a=1/2, b=1/2, mc=2000, bn=500){
 
 
 
-
-## GHS
+# GHS
 GHS <- function(Y, X, ID, mc=2000, bn=500){
   # preparation
   G <- max(ID)
@@ -182,6 +234,12 @@ GHS <- function(Y, X, ID, mc=2000, bn=500){
   X_mat <- t(X)%*%X
   delta <- 1   # prior of sigma^2
   thres <- 10^(-10)
+  n <- length(Y)
+  if(p>n){ 
+    sampler="BCM" 
+  }else{
+    sampler="Standard"
+  }
   
   # initial values
   beta <- coef(lm(Y~X-1))
@@ -200,9 +258,22 @@ GHS <- function(Y, X, ID, mc=2000, bn=500){
   for(k in 1:(mc+bn)){
     # beta
     V <- tau^2*lam[ID]*delta
-    A <- solve( X_mat + diag(1/V) + 10^(-5)*diag(p) )
-    B <- as.vector(t(X)%*%Y)
-    beta <- mvrnorm(1, A%*%B, sig^2*A)
+    V[V<thres] <- thres
+    if(sampler=="BCM"){   # BCM sampler (p>n)
+      lam_diag <- V
+      u <- rnorm(p)*sig*sqrt(lam_diag)
+      v <- X%*%u + sig*rnorm(n)
+      XL <- t(t(X)*lam_diag)
+      M <- XL%*%t(X) + diag(n)
+      rhs <- Y - v
+      w <- solve(M, rhs)
+      beta <- u + lam_diag*(t(X)%*%w)
+    }else{  # standard sampler (n<p)
+      A <- solve( X_mat + diag(1/V) )
+      B <- as.vector(t(X)%*%Y)
+      beta <- mvrnorm(1, A%*%B, sig^2*A)
+    }
+    
     if(k > bn){
       beta.pos[k-bn,] <- beta
     }
@@ -231,5 +302,3 @@ GHS <- function(Y, X, ID, mc=2000, bn=500){
   }
   return(list(beta=beta.pos, sig=sig.pos))
 }
-
-
