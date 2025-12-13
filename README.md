@@ -9,4 +9,8 @@ The repository includes the following 3 files.
 - `gR2D2.R`: Scriot to implement the proposed CSM model for graphical modeling
 - `Competitors.R`: Scriot to implement existing shrinkage pirors
 - `Example.R`: Scriot to run a oneshot simulation
+- `Abalone-data.R`: Script for analysis of Abalone data
+- `Abalone-data-validation.R`: Script for out-of-sample validation of Abalone data
+- `Monte-Carlo-Simulation.R`: Script for Monte Carlo simulation in Yanchenko et al. (2024)
+- `Summary-tale.R`: Script to summarize Monte Carlo simulation results 
 
